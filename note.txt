@@ -1,0 +1,155 @@
+================================================================================
+                    MODULE 20 ASSIGNMENT: LIBRARY MANAGEMENT SYSTEM API
+================================================================================
+
+--------------------------------------------------------------------------------
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+Objective: Build a production-ready, RESTful Backend API for a Library Management 
+           System using Node.js, Express.js, and MongoDB.
+Architecture: MVC Pattern (Model, Controller, Route layer separation).
+Note: All business logic MUST reside in Controller files. Routes should only handle 
+      endpoint definitions and middlewares.
+
+--------------------------------------------------------------------------------
+2. TECH STACK
+--------------------------------------------------------------------------------
+• Environment:    Node.js
+• Framework:      Express.js
+• Database:       MongoDB + Mongoose (ODM)
+• Authentication: JSON Web Token (JWT) + bcryptjs
+• Utilities:      dotenv, express-validator (optional)
+• API Testing:    Postman
+
+--------------------------------------------------------------------------------
+3. RECOMMENDED PROJECT STRUCTURE
+--------------------------------------------------------------------------------
+project/
+│
+├── config/             # Database connection & third-party configs
+│   └── db.js
+├── controllers/        # Business logic for Auth, Books, Borrow, User
+│   ├── authController.js
+│   ├── bookController.js
+│   ├── borrowController.js
+│   └── userController.js
+├── middleware/         # Auth verification, error handlers, input validator
+│   ├── authMiddleware.js
+│   └── errorMiddleware.js
+├── models/             # Mongoose Schemas (User, Book, Borrow)
+│   ├── User.js
+│   ├── Book.js
+│   └── Borrow.js
+├── routes/             # API routes definitions
+│   ├── authRoutes.js
+│   ├── bookRoutes.js
+│   ├── borrowRoutes.js
+│   └── userRoutes.js
+├── utils/              # Helper functions & customized response formatters
+├── .env                # Environment variables (PORT, MONGO_URI, JWT_SECRET)
+├── app.js              # Express app setup & middleware mounting
+├── server.js           # Server startup script
+└── package.json
+
+--------------------------------------------------------------------------------
+4. DATABASE MODELS SCHEMA DESIGN
+--------------------------------------------------------------------------------
+
+[User Model]
+• name         : String (Required)
+• email        : String (Required, Unique, Lowercase)
+• password     : String (Required, Hashed)
+• phone        : String (Required)
+• role         : String (Enum: ['Admin', 'User'], Default: 'User')
+• timestamps   : True (createdAt, updatedAt)
+
+[Book Model]
+• title           : String (Required)
+• author          : String (Required)
+• category        : String (Required)
+• isbn            : String (Required, Unique)
+• publishedYear   : Number (Required)
+• description     : String
+• availableCopies : Number (Required, Default: 1, Min: 0)
+• createdBy       : ObjectId (Ref: 'User', Required)
+• timestamps      : True (createdAt, updatedAt)
+
+[Borrow Model]
+• user       : ObjectId (Ref: 'User', Required)
+• book       : ObjectId (Ref: 'Book', Required)
+• borrowDate : Date (Default: Date.now)
+• returnDate : Date (Default: null)
+• status     : String (Enum: ['Borrowed', 'Returned'], Default: 'Borrowed')
+• timestamps : True (createdAt, updatedAt)
+
+--------------------------------------------------------------------------------
+5. API ENDPOINTS SUMMARY & AUTHORIZATION
+--------------------------------------------------------------------------------
+
+[Auth Routes] -> /api/auth
+• POST   /register             Public        - Register new user (Hash password)
+• POST   /login                Public        - Authenticate user & return JWT token
+
+[User Dashboard Routes] -> /api/users
+• GET    /profile              Protected     - Fetch logged-in user profile
+• PUT    /profile              Protected     - Update logged-in user name/phone
+• GET    /borrowed-books       Protected     - Get list of books borrowed by user
+
+[Book Management Routes] -> /api/books
+• POST   /                     Protected     - Add a new book (Attach createdBy ID)
+• GET    /                     Public        - Get all books (Pagination, Search, Filter, Sort)
+• GET    /:id                  Public        - Get details of a single book
+• PUT    /:id                  Protected     - Update book (Owner or Admin only)
+• DELETE /:id                  Protected     - Delete book (Owner or Admin only)
+
+[Borrowing System Routes] -> /api/borrow
+• POST   /                     Protected     - Borrow a book (Decrements availableCopies)
+• PUT    /:id/return           Protected     - Return a borrowed book (Increments availableCopies)
+
+--------------------------------------------------------------------------------
+6. KEY FUNCTIONAL & BUSINESS LOGIC REQUIREMENTS
+--------------------------------------------------------------------------------
+
+A. Database Connection:
+   - MONGO_URI must be stored securely in .env
+   - DB connection function must reside in config/db.js and called inside server.js
+
+B. Query Features for GET /api/books:
+   - Pagination : ?page=1&limit=10
+   - Search     : ?search=JavaScript (Matches title)
+   - Filter     : ?category=Programming
+   - Sorting    : ?sortBy=createdAt&sortOrder=desc
+
+C. Borrowing Rules:
+   - If availableCopies === 0, throw an error preventing borrowing.
+   - Successful borrow MUST decrement availableCopies by 1 and record a Borrow document.
+
+D. Returning Rules:
+   - Returning updates the status to "Returned" and sets the returnDate.
+   - Increment availableCopies back by 1.
+
+--------------------------------------------------------------------------------
+7. GLOBAL ERROR HANDLING & STANDARDIZED RESPONSES
+--------------------------------------------------------------------------------
+
+Ensure all API responses match the exact schema format:
+
+✔ SUCCESS RESPONSE FORMAT:
+{
+  "success": true,
+  "message": "Operation completed successfully.",
+  "data": { ... }
+}
+
+✖ ERROR RESPONSE FORMAT:
+{
+  "success": false,
+  "message": "Detailed error message here"
+}
+
+Required Middleware Handlers:
+1. Invalid MongoDB ObjectId Handler (CastError handling).
+2. 404 Route Not Found Handler.
+3. Global Centralized Error Handler (app.use((err, req, res, next) => ...)).
+
+================================================================================
