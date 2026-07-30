@@ -20,7 +20,6 @@ const UserSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     role: {
       type: String,
-      required: true,
       enum: ["Admin", "User"],
       default: "User",
     },
@@ -45,14 +44,9 @@ const UserSchema = new mongoose.Schema(
 
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
-  try {
-    this.password = await hashPassword(this.password);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  this.password = await hashPassword(this.password);
 });
 
 UserSchema.methods.comparePassword = async function (userPassword) {

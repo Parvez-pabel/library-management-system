@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
 import { notFoundHandler } from "./src/middleware/pageNotFoundHandler.js";
 import { globalErrorHandler } from "./src/middleware/globalErrorHandler.js";
+import UserRouter from "./src/routes/api.js";
 
 dotenv.config();
 
@@ -11,14 +12,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(notFoundHandler);
-app.use(globalErrorHandler);
 // Connect to MongoDB
 
 connectDB();
-
-// app.use("/api/v1", router);
-
 //server health
 
 app.get("/", (req, res) => {
@@ -26,5 +22,11 @@ app.get("/", (req, res) => {
     message: "Server is running",
   });
 });
+
+//base route
+app.use("/api/v1/user", UserRouter);
+
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
 
 export default app;
