@@ -25,10 +25,17 @@ export const protect = async (req, res, next) => {
 
 export const authRole = (...roles) => {
   return (req, res, next) => {
+    if (!req.user || !req.user.role) {
+      return sendError(
+        res,
+        "Unauthorized! User role information is missing.",
+        401,
+      );
+    }
     if (!roles.includes(req.user.role)) {
       return sendError(
         res,
-        `Role (${req.user.role}) is not authorize to access this resource`,
+        ` (${req.user.role}) is not authorize to access this resource`,
         403,
       );
     }

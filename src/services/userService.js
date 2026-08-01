@@ -159,3 +159,150 @@ export const profileDetailService = async (req) => {
     throw error;
   }
 };
+// profile update
+export const profileUpdateService = async (req, res) => {
+  try {
+    const userID = req.user.userID;
+    let reqBody = { ...req.body };
+
+    delete reqBody.email;
+    delete reqBody.password;
+    delete reqBody.role;
+    delete reqBody.status;
+    delete reqBody.otp;
+    delete reqBody.otpExpiry;
+
+    let updatedProfile = userModel
+      .findByIdAndUpdate(
+        { _id: userID },
+        { $set: reqBody },
+        { new: true, runValidators: true },
+      )
+      .select("-password -otp -otpExpiry");
+    if (!updatedProfile) {
+      const error = new Error("User profile not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+    return updatedProfile;
+  } catch (error) {
+    throw error;
+  }
+};
+
+//forget password
+//reset password
+
+//admin activities
+export const DeleteService = async (req) => {
+  try {
+    const userID = req.params.id;
+    const currentUserRole = req.user?.role;
+    const currentUserID = req.user?.userID;
+
+    if (!userID) {
+      const error = new Error("User ID is required in request parameters.");
+      error.statusCode = 404;
+      throw error;
+    }
+    if (currentUserRole !== "Admin") {
+      const error = new Error(
+        "You cannot perform this action. Admin role required.",
+      );
+      error.statusCode = 403;
+      throw error;
+    }
+    if (currentUserID.toString() === userID.toString()) {
+      const error = new Error(
+        "Admin cannot delete their own account using this route.",
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+    const deletedUser = await userModel.findByIdAndDelete(userID);
+
+    if (!deletedUser) {
+      const error = new Error("User not found with the provided ID.");
+      error.statusCode = 404;
+      throw error;
+    }
+    const userObj = deletedUser.toObject();
+    delete userObj.password;
+    delete userObj.otp;
+
+    return userObj;
+  } catch (error) {
+    throw error;
+  }
+};
+// all profile
+export const getAllProfileService = async (req) => {
+  try {
+    const { search, role, page = 1, limit = 10 } = req.query;
+    const query = {};
+    if (role) {
+      query.role = role;
+    }
+
+    //search by name, number, email
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+      ];
+    }
+    //pagination
+    const pageNum = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.max(1, parseInt(limit, 10));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [totalUsers, users] = await Promise.all([
+      userModel.countDocuments(query),
+      userModel
+        .find(query)
+        .select("-password -otp -otpExpiry")
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ createdAt: -1 }),
+    ]);
+    return {
+      totalUsers,
+      currentPage: pageNum,
+      totalPages: Math.ceil(totalUsers / limitNum),
+      limit: limitNum,
+      users,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+export const profileUpdateByIdService = async (req, res) => {
+  try {
+    const userID = req.params.id;
+    let reqBody = { ...req.body };
+
+    delete reqBody.status;
+    delete reqBody.otp;
+    delete reqBody.otpExpiry;
+
+    let updatedProfile = userModel
+      .findByIdAndUpdate(
+        { _id: userID },
+        { $set: reqBody },
+        { new: true, runValidators: true },
+      )
+      .select("-password -otp -otpExpiry");
+    if (!updatedProfile) {
+      const error = new Error("User profile not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+    return updatedProfile;
+  } catch (error) {
+    throw error;
+  }
+};
+
+//logout

@@ -1,6 +1,10 @@
 import {
+  DeleteService,
+  getAllProfileService,
   loginService,
   profileDetailService,
+  profileUpdateByIdService,
+  profileUpdateService,
   registerUserService,
   resendOTPService,
   verifyOTPService,
@@ -40,7 +44,7 @@ export const resendOTP = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const result = await loginService(req);
-    return sendSuccess(res, result, "Login successful", 201);
+    return sendSuccess(res, result, `${result.name} Login successful`, 201);
   } catch (error) {
     next(error);
   }
@@ -49,7 +53,51 @@ export const login = async (req, res, next) => {
 export const profile = async (req, res, next) => {
   try {
     const result = await profileDetailService(req);
-    return sendSuccess(res, result,"Profile fetched successfully", 201);
+    return sendSuccess(res, result, "Profile fetched successfully", 201);
+  } catch (error) {
+    next(error);
+  }
+};
+export const profileUpdate = async (req, res, next) => {
+  try {
+    const result = await profileUpdateService(req, res);
+    return sendSuccess(
+      res,
+      result,
+      `${result.name} Profile updated successfully`,
+      201,
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+//admin access needed
+export const profileDelete = async (req, res, next) => {
+  try {
+    const result = await DeleteService(req);
+    return sendSuccess(res, result, "Profile deleted successfully", 200);
+  } catch (error) {
+    next(error);
+  }
+};
+export const getAllProfile = async (req, res, next) => {
+  try {
+    const result = await getAllProfileService(req);
+    return sendSuccess(res, result, "All Profile fetched successfully", 200);
+  } catch (error) {
+    next(error);
+  }
+};
+export const profileUpdateAdmin = async (req, res, next) => {
+  try {
+    const result = await profileUpdateByIdService(req, res);
+    return sendSuccess(
+      res,
+      result,
+      `${result.name} Profile updated successfully`,
+      201,
+    );
   } catch (error) {
     next(error);
   }
