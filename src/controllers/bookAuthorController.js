@@ -3,6 +3,7 @@ import {
   bookUpdateService,
   DeleteService,
   getAllBooksService,
+  getBookDetailsService,
 } from "../services/bookAuthorService.js";
 import { sendSuccess } from "../utils/responseHandler.js";
 
@@ -50,6 +51,14 @@ export const bookUpdate = async (req, res, next) => {
       `${result.title} Book updated successfully`,
       201,
     );
+  } catch (error) {
+    next(error);
+  }
+};
+export const getBookDetails = async (req, res, next) => {
+  try {
+    const result = await getBookDetailsService(req);
+    return sendSuccess(res, result, "Book details fetched successfully", 200);
   } catch (error) {
     next(error);
   }

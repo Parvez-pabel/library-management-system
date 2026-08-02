@@ -165,3 +165,29 @@ export const DeleteService = async (req) => {
     throw error;
   }
 };
+export const getBookDetailsService = async (req) => {
+  try {
+    const bookId = req.params.id;
+
+    if (!bookId) {
+      const error = new Error("Book ID is required in URL parameters.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const book = await bookModel.findById(bookId).select("-__v").populate({
+      path: "createdBy",
+      select: "name email role",
+    });
+
+    if (!book) {
+      const error = new Error("Book not found with the provided ID.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return book;
+  } catch (error) {
+    throw error;
+  }
+};

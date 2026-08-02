@@ -8,6 +8,7 @@ import {
   profileUpdateAdmin,
   register,
   resendOTP,
+  userBorrowedBook,
   verifyOTP,
 } from "../controllers/userController.js";
 import { authRole, protect } from "../middleware/authMiddleware.js";
@@ -21,7 +22,6 @@ UserRouter.post("/login", login);
 UserRouter.get("/profile", protect, profile);
 UserRouter.put("/profile/update", protect, profileUpdate);
 
-
 //admin activity route
 UserRouter.delete(
   "/profile/delete/:id",
@@ -30,10 +30,17 @@ UserRouter.delete(
   profileDelete,
 );
 UserRouter.get("/all-profile", protect, authRole("Admin"), getAllProfile);
+UserRouter.get(
+  "/user-borrowed-book/:id",
+  protect,
+  authRole("Admin"),
+  userBorrowedBook,
+);
 UserRouter.put(
   "/profile/update/:id",
   protect,
   authRole("Admin"),
-  profileUpdateAdmin,);
+  profileUpdateAdmin,
+);
 
 export default UserRouter;

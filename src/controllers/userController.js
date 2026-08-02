@@ -7,6 +7,7 @@ import {
   profileUpdateService,
   registerUserService,
   resendOTPService,
+  userBorrowedBookDetails,
   verifyOTPService,
 } from "../services/userService.js";
 import { sendSuccess } from "./../utils/responseHandler.js";
@@ -96,6 +97,19 @@ export const profileUpdateAdmin = async (req, res, next) => {
       res,
       result,
       `${result.name} Profile updated successfully`,
+      201,
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+export const userBorrowedBook = async (req, res, next) => {
+  try {
+    const result = await userBorrowedBookDetails(req, res);
+    return sendSuccess(
+      res,
+      result,
+      `${result.name} User profile with borrow history fetched successfully.`,
       201,
     );
   } catch (error) {

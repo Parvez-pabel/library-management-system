@@ -1,3 +1,4 @@
+import borrowModel from "../models/borrowModel.js";
 import userModel from "../models/userModel.js";
 import { generateOTP, getOtpExpiryTime } from "../utils/otpHelper.js";
 import { paginate } from "../utils/paginate.js";
@@ -287,6 +288,58 @@ export const profileUpdateByIdService = async (req, res) => {
       throw error;
     }
     return updatedProfile;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const userBorrowedBookDetails = async (req) => {
+  try {
+    const targetUserID = req.params.id;
+
+    if (!targetUserID) {
+      const error = new Error("User ID is required.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const userProfile = await userModel
+      .findById(targetUserID)
+      .select("-password -otp -otpExpiry -__v")
+      .lean();
+
+    if (!userProfile) {
+      const error = new Error("User not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const [totalBorrowed, pendingReturn, totalReturned, borrowedHistory] =
+      await Promise.all([
+        borrowModel.countDocuments({ user: targetUserID }),
+        borrowModel.countDocuments({ user: targetUserID, status: "Borrowed" }),
+        borrowModel.countDocuments({ user: targetUserID, status: "Returned" }),
+
+        borrowModel
+          .find({ user: targetUserID })
+          .select("-user -__v")
+          .populate({
+            path: "book",
+            select: "title author photo category isbn availableCopies",
+          })
+          .sort({ createdAt: -1 })
+          .lean(),
+      ]);
+
+    return {
+      user: userProfile,
+      borrowSummary: {
+        totalBorrowed,
+        pendingReturn,
+        totalReturned,
+      },
+      borrowedHistory,
+    };
   } catch (error) {
     throw error;
   }
