@@ -1,5 +1,6 @@
 import userModel from "../models/userModel.js";
 import { generateOTP, getOtpExpiryTime } from "../utils/otpHelper.js";
+import { paginate } from "../utils/paginate.js";
 import { matchPassword } from "../utils/passwordHash.js";
 import { CreateToken } from "./../utils/TokenHelper.js";
 
@@ -238,42 +239,28 @@ export const DeleteService = async (req) => {
 // all profile
 export const getAllProfileService = async (req) => {
   try {
-    const { search, role, page = 1, limit = 10 } = req.query;
-    const query = {};
+    const { search, role } = req.query;
+    const filter = {};
     if (role) {
-      query.role = role;
+      filter.role = role;
     }
 
     //search by name, number, email
     if (search) {
       const searchRegex = new RegExp(search, "i");
-      query.$or = [
+      filter.$or = [
         { name: searchRegex },
         { email: searchRegex },
         { phone: searchRegex },
       ];
     }
-    //pagination
-    const pageNum = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.max(1, parseInt(limit, 10));
-    const skip = (pageNum - 1) * limitNum;
-
-    const [totalUsers, users] = await Promise.all([
-      userModel.countDocuments(query),
-      userModel
-        .find(query)
-        .select("-password -otp -otpExpiry")
-        .skip(skip)
-        .limit(limitNum)
-        .sort({ createdAt: -1 }),
-    ]);
-    return {
-      totalUsers,
-      currentPage: pageNum,
-      totalPages: Math.ceil(totalUsers / limitNum),
-      limit: limitNum,
-      users,
-    };
+    const profiles = await paginate({
+      model: userModel,
+      reqQuery: req.query,
+      customFilter: filter,
+      selectFields: "_id name email phone role status photo",
+    });
+    return profiles;
   } catch (error) {
     throw error;
   }

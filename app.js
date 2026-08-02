@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
 import { notFoundHandler } from "./src/middleware/pageNotFoundHandler.js";
 import { globalErrorHandler } from "./src/middleware/globalErrorHandler.js";
-import UserRouter from "./src/routes/api.js";
+import UserRouter from "./src/routes/userApi.js";
+import BookRouter from "./src/routes/bookApi.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.get("/", (req, res) => {
 
 //base route
 app.use("/api/v1/user", UserRouter);
+app.use("/api/v1/book", BookRouter);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
