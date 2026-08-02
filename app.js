@@ -25,8 +25,8 @@ app.get("/", (req, res) => {
 });
 
 //base route
-app.use("/api/v1/user", UserRouter);
-app.use("/api/v1/book", BookRouter);
+app.use("/api/auth/user", UserRouter);
+app.use("/api/books", BookRouter);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
